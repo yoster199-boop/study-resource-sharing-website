@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Uploads</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 0 15px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+    .card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
+    .card img { width: 100%; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>My Uploads</h1>
+  <p>
+    <a href="/">All materials</a> |
+    <a href="/upload">Upload new material</a> |
+    <a href="/logout">Log out</a>
+  </p>
+
+  {% with messages = get_flashed_messages() %}
+    {% for message in messages %}
+      <p><strong>{{ message }}</strong></p>
+    {% endfor %}
+  {% endwith %}
+
+  {% if materials %}
+    <div class="grid">
+      {% for item in materials %}
+        <div class="card">
+          <img src="{{ item.image_url }}" alt="{{ item.title }}">
+          <h3>{{ item.title }}</h3>
+          {% if item.subject %}<p><strong>{{ item.subject }}</strong></p>{% endif %}
+          {% if item.description %}<p>{{ item.description }}</p>{% endif %}
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p>You haven't uploaded anything yet.</p>
+  {% endif %}
+</body>
+</html>

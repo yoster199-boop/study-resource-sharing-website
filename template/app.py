@@ -1,6 +1,6 @@
 import os
 import uuid
-from flask import Flask, render_template, request, redirect, flash
+from flask import Flask, render_template, request, redirect, flash, session, url_for
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from supabase import create_client
@@ -14,7 +14,7 @@ supabase = create_client(url, key)
 
 app = Flask(__name__)
 
-app.secret_key = "bigbanggang"
+app.secret_key = os.environ.get("FLASK_SECRET_KEY")
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5 MB limit
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
@@ -23,6 +23,8 @@ SUBJECTS = ["Biology", "Chemistry", "Physics", "Maths", "English", "German", "Ge
 
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+def logged_in():
+    return "user_id" in session
 
 @app.route("/")
 def index():
@@ -69,6 +71,9 @@ def test():
 
 @app.route("/upload", methods=["GET", "POST"])
 def upload():
+    if not logged_in():
+        flash("Please log in to upload.")
+        return redirect("/login")
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         subject = request.form.get("subject", "").strip()
@@ -102,6 +107,7 @@ def upload():
                 "description": description,
                 "image_path": path,
                 "image_url": image_url,
+                "user_id": session["user_id"],
             }).execute()
         except Exception as e:
             print("UPLOAD ERROR:", e)
@@ -112,5 +118,81 @@ def upload():
         return redirect("/upload")
 
     return render_template("upload.html", subjects=SUBJECTS)
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        if not email or len(password) < 8:
+            flash("Enter an email and a password of at least 8 characters.")
+            return redirect("/signup")
+
+        try:
+            result = supabase.auth.sign_up({"email": email, "password": password})
+            if result.user is None:
+                raise Exception("No user returned")
+        except Exception as e:
+            print("SIGNUP ERROR:", e)
+            flash("Could not create account. The email may already be in use.")
+            return redirect("/signup")
+
+        flash("Account created! Please log in.")
+        return redirect("/login")
+
+    return render_template("signup.html")
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        email = request.form.get("email", "").strip()
+        password = request.form.get("password", "")
+
+        try:
+            result = supabase.auth.sign_in_with_password(
+                {"email": email, "password": password}
+            )
+            session["user_id"] = result.user.id
+            session["email"] = result.user.email
+            supabase.auth.sign_out()
+        except Exception as e:
+            print("LOGIN ERROR:", e)
+            flash("Incorrect email or password.")
+            return redirect("/login")
+
+        flash("Logged in!")
+        return redirect("/")
+
+    return render_template("login.html")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("Logged out.")
+    return redirect("/")
+
+@app.route("/my-uploads")
+def my_uploads():
+    if not logged_in():
+        flash("Please log in to see your uploads.")
+        return redirect("/login")
+
+    try:
+        response = (
+            supabase.table("materials")
+            .select("*")
+            .eq("user_id", session["user_id"])
+            .order("created_at", desc=True)
+            .execute()
+        )
+        materials = response.data
+    except Exception as e:
+        print("MY UPLOADS ERROR:", e)
+        materials = []
+
+    return render_template("my_uploads.html", materials=materials)
+
 if __name__ == "__main__":
     app.run(debug=True)
