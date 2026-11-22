@@ -1,52 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>My Uploads</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 0 15px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
-    .card img { width: 100%; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <h1>My Uploads</h1>
-  <p>
-    <a href="/">All materials</a> |
-    <a href="/upload">Upload new material</a> |
-    <a href="/logout">Log out</a>
-  </p>
+{% extends "base.html" %}
+{% from "_post.html" import post %}
 
-  {% with messages = get_flashed_messages() %}
-    {% for message in messages %}
-      <p><strong>{{ message }}</strong></p>
-    {% endfor %}
-  {% endwith %}
-
-  {% if materials %}
-    <div class="grid">
-      {% for item in materials %}
-        <div class="card">
-          <img class="zoomable"
-          src="{{ item.image_url }}"
-          alt="{{ item.title }}"
-          data-full="{{ item.image_url.rstrip('?') }}"
-          data-download="{{ item.image_url.rstrip('?') }}?download={{ item.image_path|urlencode }}"
-          data-title="{{ item.title }}">
-          <h3>{{ item.title }}</h3>
-          {% if item.profiles %}<p>by <a href="/u/{{ item.profiles.username }}">@{{ item.profiles.username }}</a></p>{% endif %}
-          {% if item.subject %}<p><strong>{{ item.subject }}</strong></p>{% endif %}
-          {% if item.description %}<p>{{ item.description }}</p>{% endif %}
-          <form method="POST" action="/delete/{{ item.id }}"
-            onsubmit="return confirm('Delete this upload permanently?');">
-            <button type="submit">Delete</button>
-          </form>
-        </div>
-      {% endfor %}
-    </div>
+{% block title %}My posts{% endblock %}
+{% block content %}
+  {% for item in materials %}
+    {{ post(item, session['username'], True) }}
   {% else %}
-    <p>You haven't uploaded anything yet.</p>
-  {% endif %}
-  {% include "_lightbox.html" %}
-</body>
-</html>
+    <p class="empty">You haven't posted anything yet.</p>
+  {% endfor %}
+{% endblock %}

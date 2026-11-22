@@ -1,63 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Study Materials</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: 20px auto; padding: 0 15px; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
-    .card { border: 1px solid #ddd; border-radius: 8px; padding: 10px; }
-    .card img { width: 100%; border-radius: 4px; }
-  </style>
-</head>
-<body>
-  <h1>Study Materials</h1>
-  {% with messages = get_flashed_messages() %}
-  {% for message in messages %}
-    <p><strong>{{ message }}</strong></p>
-  {% endfor %}
-{% endwith %}
-  <p>
-  {% if session.get("user_id") %}
-    <a href="/u/{{ session['username'] }}">@{{ session['username'] }}</a>
-    <a href="/upload">Upload new material</a> |
-    <a href="/my-uploads">My uploads</a> |
-    <a href="/logout">Log out</a>
-  {% else %}
-    <a href="/login">Log in</a> | <a href="/signup">Sign up</a>
-  {% endif %}
-</p>
-  <form method="GET" action="/">
-  <input type="text" name="q" value="{{ q }}" placeholder="Search e.g. enzymes">
-  <select name="subject">
-    <option value="">All subjects</option>
-    {% for s in subjects %}
-      <option value="{{ s }}" {% if s == selected_subject %}selected{% endif %}>{{ s }}</option>
-    {% endfor %}
-  </select>
-  <button type="submit">Search</button>
-  <a href="/">Clear</a>
-</form>
+{% extends "base.html" %}
+{% from "_post.html" import post %}
 
-  {% if materials %}
-    <div class="grid">
-      {% for item in materials %}
-        <div class="card">
-          <img class="zoomable"
-            src="{{ item.image_url }}"
-            alt="{{ item.title }}"
-            data-full="{{ item.image_url.rstrip('?') }}"
-            data-download="{{ item.image_url.rstrip('?') }}?download={{ item.image_path|urlencode }}"
-            data-title="{{ item.title }}">
-          <h3>{{ item.title }}</h3>
-          {% if item.profiles %}<p>by <a href="/u/{{ item.profiles.username }}">@{{ item.profiles.username }}</a></p>{% endif %}
-          {% if item.subject %}<p><strong>{{ item.subject }}</strong></p>{% endif %}
-          {% if item.description %}<p>{{ item.description }}</p>{% endif %}
-        </div>
-      {% endfor %}
-    </div>
+{% block content %}
+  <div class="chips">
+    {% for s in subjects %}
+      <a href="/?subject={{ s|urlencode }}" class="{{ 'on' if s == selected_subject else '' }}">#{{ s|lower|replace(' ', '') }}</a>
+    {% endfor %}
+  </div>
+
+  {% for item in materials %}
+    {{ post(item, item.profiles.username if item.profiles else None) }}
   {% else %}
-    <p>No materials found.</p>
-  {% endif %}
-  {% include "_lightbox.html" %}
-</body>
-</html>
+    <p class="empty">Nothing here yet.</p>
+  {% endfor %}
+{% endblock %}

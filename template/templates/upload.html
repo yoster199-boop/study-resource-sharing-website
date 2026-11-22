@@ -1,41 +1,26 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Upload Study Material</title>
-</head>
-<body>
-  <h1>Upload Study Material</h1>
-  <p><a href="/">Back to all materials</a></p>
-  {% with messages = get_flashed_messages() %}
-   {% for message in messages %}
-     <p><strong>{{ message }}</strong></p>
-   {% endfor %}
-  {% endwith %}
-
-  <form method="POST" enctype="multipart/form-data">
-    <p>
-      <label>Title:</label><br>
+{% extends "base.html" %}
+{% block title %}Upload{% endblock %}
+{% block content %}
+  <div class="form-card">
+    <h1>New post</h1>
+    <form method="POST" enctype="multipart/form-data">
+      <label>Title</label>
       <input type="text" name="title" required>
-    </p>
-    <p>
-  <label>Subject:</label><br>
-  <select name="subject" required>
-    <option value="">-- Choose a subject --</option>
-    {% for s in subjects %}
-      <option value="{{ s }}">{{ s }}</option>
-    {% endfor %}
-  </select>
-</p>
-<p>
-  <label>Description:</label><br>
-  <textarea name="description" rows="4" cols="40"
-    placeholder="e.g. My notes on enzymes, covering the lock and key model"></textarea>
-</p>
-    <p>
-      <label>Image:</label><br>
+
+      <label>Subject</label>
+      <select name="subject" required>
+        <option value="">Choose a subject</option>
+        {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+      </select>
+
+      <label>Description</label>
+      <textarea name="description" rows="4"
+        placeholder="e.g. My notes on enzymes, covering the lock and key model"></textarea>
+
+      <label>Image</label>
       <input type="file" name="image" accept="image/*" required>
-    </p>
-    <button type="submit">Upload</button>
-  </form>
-</body>
-</html>
+
+      <button class="btn" type="submit">Post</button>
+    </form>
+  </div>
+{% endblock %}

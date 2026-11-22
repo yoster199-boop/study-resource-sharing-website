@@ -1,18 +1,13 @@
-<!DOCTYPE html>
-<html>
-<head><title>Edit profile</title></head>
-<body>
-  <h1>Edit profile</h1>
-  <p><a href="/u/{{ profile.username }}">Back to my profile</a></p>
-
-  {% with messages = get_flashed_messages() %}
-    {% for message in messages %}<p><strong>{{ message }}</strong></p>{% endfor %}
-  {% endwith %}
-
-  <form method="POST">
-    <p><label>Bio (max 300 characters):</label><br>
-    <textarea name="bio" rows="4" cols="40" maxlength="300">{{ profile.bio or '' }}</textarea></p>
-    <button type="submit">Save</button>
-  </form>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Edit profile{% endblock %}
+{% block content %}
+  <div class="form-card">
+    <h1>Edit profile</h1>
+    <form method="POST">
+      <label>Bio (max 300 characters)</label>
+      <textarea name="bio" rows="4" maxlength="300">{{ profile.bio or '' }}</textarea>
+      <button class="btn" type="submit">Save</button>
+    </form>
+    <p class="alt"><a href="/u/{{ profile.username }}">Back to my profile</a></p>
+  </div>
+{% endblock %}

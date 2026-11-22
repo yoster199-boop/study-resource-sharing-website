@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}studyblr{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="nav">
+    <a class="logo" href="/">studyblr</a>
+    <form class="search" action="/" method="GET">
+      <input type="search" name="q" value="{{ q or '' }}" placeholder="Search notes">
+    </form>
+    <nav>
+      {% if session.get("user_id") %}
+        <a href="/upload">Upload</a>
+        <a href="/my-uploads">My posts</a>
+        <a href="/u/{{ session['username'] }}">@{{ session['username'] }}</a>
+        <a href="/logout">Log out</a>
+      {% else %}
+        <a href="/login">Log in</a>
+        <a class="btn" href="/signup">Sign up</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main class="wrap">
+    {% with messages = get_flashed_messages() %}
+      {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  
+</body>
+</html>

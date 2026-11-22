@@ -1,0 +1,43 @@
+{% macro post(item, username=None, can_delete=False) %}
+<article class="post-row">
+  {% if username %}
+    <a class="avatar" href="/u/{{ username }}">{{ username[0]|upper }}</a>
+  {% else %}
+    <span class="avatar">?</span>
+  {% endif %}
+
+  <div class="post">
+    <div class="post-head">
+      {% if username %}<a href="/u/{{ username }}">{{ username }}</a>{% else %}anonymous{% endif %}
+    </div>
+
+    <img class="zoomable"
+         src="{{ item.image_url }}"
+         alt="{{ item.title }}"
+         data-full="{{ item.image_url.rstrip('?') }}"
+         data-download="{{ item.image_url.rstrip('?') }}?download={{ item.image_path|urlencode }}"
+         data-title="{{ item.title }}">
+
+    <div class="post-body">
+      <h2>{{ item.title }}</h2>
+      {% if item.description %}<p>{{ item.description }}</p>{% endif %}
+      {% if item.subject %}
+        <div class="tags"><a href="/?subject={{ item.subject|urlencode }}">#{{ item.subject|lower|replace(' ', '') }}</a></div>
+      {% endif %}
+    </div>
+
+    <div class="post-foot">
+      <span>{{ item.created_at[:10] if item.created_at else '' }}</span>
+      <span class="actions">
+        <a href="{{ item.image_url.rstrip('?') }}?download={{ item.image_path|urlencode }}">Download</a>
+        {% if can_delete %}
+          <form method="POST" action="/delete/{{ item.id }}"
+                onsubmit="return confirm('Delete this upload permanently?');">
+            <button type="submit">Delete</button>
+          </form>
+        {% endif %}
+      </span>
+    </div>
+  </div>
+</article>
+{% endmacro %}

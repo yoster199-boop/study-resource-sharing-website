@@ -1,22 +1,17 @@
-<!DOCTYPE html>
-<html>
-<head><title>Sign up</title></head>
-<body>
-  <h1>Create an account</h1>
-  <p><a href="/">Back to all materials</a></p>
-
-  {% with messages = get_flashed_messages() %}
-    {% for message in messages %}
-      <p><strong>{{ message }}</strong></p>
-    {% endfor %}
-  {% endwith %}
-
-  <form method="POST">
-    <p><label>Email:</label><br><input type="email" name="email" required></p>
-    <p><label>Password (8+ characters):</label><br><input type="password" name="password" required></p>
-    <p><label>Username (3-20 letters, numbers, _):</label><br><input type="text" name="username" required></p>
-    <button type="submit">Sign up</button>
-  </form>
-  <p>Already have an account? <a href="/login">Log in</a></p>
-</body>
-</html>
+{% extends "base.html" %}
+{% block title %}Sign up{% endblock %}
+{% block content %}
+  <div class="form-card">
+    <h1>Sign up</h1>
+    <form method="POST">
+      <label>Email</label>
+      <input type="email" name="email" required>
+      <label>Username (3-20 letters, numbers, _)</label>
+      <input type="text" name="username" required>
+      <label>Password (8+ characters)</label>
+      <input type="password" name="password" required>
+      <button class="btn" type="submit">Sign up</button>
+    </form>
+    <p class="alt">Already have an account? <a href="/login">Log in</a></p>
+  </div>
+{% endblock %}
