@@ -1,0 +1,56 @@
+<style>
+  .zoomable { cursor: zoom-in; }
+  #lightbox {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(0, 0, 0, 0.85);
+    align-items: center; justify-content: center; flex-direction: column;
+    padding: 20px; box-sizing: border-box;
+  }
+  #lightbox.open { display: flex; }
+  #lb-img { max-width: 95vw; max-height: 75vh; border-radius: 6px; }
+  #lb-title { color: #fff; margin: 12px 0 8px; font-family: Arial, sans-serif; }
+  #lb-download {
+    background: #fff; color: #000; padding: 8px 18px; border-radius: 6px;
+    text-decoration: none; font-family: Arial, sans-serif;
+  }
+  #lb-close {
+    position: absolute; top: 12px; right: 18px; background: none; border: none;
+    color: #fff; font-size: 36px; cursor: pointer;
+  }
+</style>
+
+<div id="lightbox" role="dialog" aria-modal="true">
+  <button id="lb-close" aria-label="Close">&times;</button>
+  <img id="lb-img" src="" alt="">
+  <p id="lb-title"></p>
+  <a id="lb-download" href="#">Download</a>
+</div>
+
+<script>
+  (function () {
+    var box = document.getElementById("lightbox");
+    var img = document.getElementById("lb-img");
+    var title = document.getElementById("lb-title");
+    var dl = document.getElementById("lb-download");
+
+    function openBox(el) {
+      img.src = el.dataset.full;
+      img.alt = el.dataset.title;
+      title.textContent = el.dataset.title;
+      dl.href = el.dataset.download;
+      box.classList.add("open");
+    }
+    function closeBox() {
+      box.classList.remove("open");
+      img.src = "";
+    }
+
+    document.addEventListener("click", function (e) {
+      if (e.target.classList.contains("zoomable")) openBox(e.target);
+      else if (e.target === box || e.target.id === "lb-close") closeBox();
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") closeBox();
+    });
+  })();
+</script>

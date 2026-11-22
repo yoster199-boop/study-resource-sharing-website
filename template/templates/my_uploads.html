@@ -27,7 +27,12 @@
     <div class="grid">
       {% for item in materials %}
         <div class="card">
-          <img src="{{ item.image_url }}" alt="{{ item.title }}">
+          <img class="zoomable"
+          src="{{ item.image_url }}"
+          alt="{{ item.title }}"
+          data-full="{{ item.image_url.rstrip('?') }}"
+          data-download="{{ item.image_url.rstrip('?') }}?download={{ item.image_path|urlencode }}"
+          data-title="{{ item.title }}">
           <h3>{{ item.title }}</h3>
           {% if item.profiles %}<p>by <a href="/u/{{ item.profiles.username }}">@{{ item.profiles.username }}</a></p>{% endif %}
           {% if item.subject %}<p><strong>{{ item.subject }}</strong></p>{% endif %}
@@ -42,5 +47,6 @@
   {% else %}
     <p>You haven't uploaded anything yet.</p>
   {% endif %}
+  {% include "_lightbox.html" %}
 </body>
 </html>
