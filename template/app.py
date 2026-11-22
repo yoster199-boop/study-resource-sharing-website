@@ -194,5 +194,41 @@ def my_uploads():
 
     return render_template("my_uploads.html", materials=materials)
 
+@app.route("/delete/<int:item_id>", methods=["POST"])
+def delete(item_id):
+    if not logged_in():
+        flash("Please log in.")
+        return redirect("/login")
+
+    try:
+        # Find the row, but only if it belongs to this user
+        result = (
+            supabase.table("materials")
+            .select("*")
+            .eq("id", item_id)
+            .eq("user_id", session["user_id"])
+            .execute()
+        )
+
+        if not result.data:
+            flash("Item not found, or it isn't yours.")
+            return redirect("/my-uploads")
+
+        item = result.data[0]
+
+        # Delete the file from Storage, then the row from the table
+        supabase.storage.from_(BUCKET).remove([item["image_path"]])
+        supabase.table("materials").delete().eq("id", item_id).eq(
+            "user_id", session["user_id"]
+        ).execute()
+
+    except Exception as e:
+        print("DELETE ERROR:", e)
+        flash("Something went wrong while deleting.")
+        return redirect("/my-uploads")
+
+    flash("Deleted.")
+    return redirect("/my-uploads")
+
 if __name__ == "__main__":
     app.run(debug=True)

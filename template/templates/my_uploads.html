@@ -31,6 +31,10 @@
           <h3>{{ item.title }}</h3>
           {% if item.subject %}<p><strong>{{ item.subject }}</strong></p>{% endif %}
           {% if item.description %}<p>{{ item.description }}</p>{% endif %}
+          <form method="POST" action="/delete/{{ item.id }}"
+            onsubmit="return confirm('Delete this upload permanently?');">
+            <button type="submit">Delete</button>
+          </form>
         </div>
       {% endfor %}
     </div>
