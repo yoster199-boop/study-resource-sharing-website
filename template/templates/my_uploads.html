@@ -29,6 +29,7 @@
         <div class="card">
           <img src="{{ item.image_url }}" alt="{{ item.title }}">
           <h3>{{ item.title }}</h3>
+          {% if item.profiles %}<p>by <a href="/u/{{ item.profiles.username }}">@{{ item.profiles.username }}</a></p>{% endif %}
           {% if item.subject %}<p><strong>{{ item.subject }}</strong></p>{% endif %}
           {% if item.description %}<p>{{ item.description }}</p>{% endif %}
           <form method="POST" action="/delete/{{ item.id }}"

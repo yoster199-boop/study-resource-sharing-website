@@ -1,5 +1,6 @@
 import os
 import uuid
+import re
 from flask import Flask, render_template, request, redirect, flash, session, url_for
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
@@ -11,6 +12,7 @@ load_dotenv()
 url = os.environ.get("SUPABASE_URL")
 key = os.environ.get("SUPABASE_KEY")
 supabase = create_client(url, key)
+auth_client = create_client(url, key)
 
 app = Flask(__name__)
 
@@ -32,7 +34,7 @@ def index():
     subject = request.args.get("subject", "").strip()
 
     try:
-        query = supabase.table("materials").select("*")
+        query = supabase.table("materials").select("*, profiles(username)")
 
         if subject in SUBJECTS:
             query = query.eq("subject", subject)
@@ -121,17 +123,30 @@ def upload():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        username = request.form.get("username", "").strip().lower()
         email = request.form.get("email", "").strip()
         password = request.form.get("password", "")
 
         if not email or len(password) < 8:
             flash("Enter an email and a password of at least 8 characters.")
             return redirect("/signup")
-
+        if not re.fullmatch(r"[a-z0-9_]{3,20}", username):
+            flash("Username must be 3-20 characters: letters, numbers, underscores.")
+            return redirect("/signup")
+        
+        taken = supabase.table("profiles").select("user_id").eq("username", username).execute()
+        if taken.data:
+            flash("That username is taken.")
+            return redirect("/signup")
+        
         try:
-            result = supabase.auth.sign_up({"email": email, "password": password})
+            result = auth_client.auth.sign_up({"email": email, "password": password})
             if result.user is None:
                 raise Exception("No user returned")
+            supabase.table("profiles").insert({
+            "user_id": result.user.id,
+            "username": username,
+}).execute()
         except Exception as e:
             print("SIGNUP ERROR:", e)
             flash("Could not create account. The email may already be in use.")
@@ -150,12 +165,13 @@ def login():
         password = request.form.get("password", "")
 
         try:
-            result = supabase.auth.sign_in_with_password(
+            result = auth_client.auth.sign_in_with_password(
                 {"email": email, "password": password}
             )
             session["user_id"] = result.user.id
             session["email"] = result.user.email
-            supabase.auth.sign_out()
+            prof = supabase.table("profiles").select("username").eq("user_id", result.user.id).execute()
+            session["username"] = prof.data[0]["username"] if prof.data else None
         except Exception as e:
             print("LOGIN ERROR:", e)
             flash("Incorrect email or password.")
@@ -229,6 +245,49 @@ def delete(item_id):
 
     flash("Deleted.")
     return redirect("/my-uploads")
+
+@app.route("/u/<username>")
+def profile(username):
+    try:
+        prof = supabase.table("profiles").select("*").eq("username", username.lower()).execute()
+        if not prof.data:
+            return "User not found", 404
+        profile_data = prof.data[0]
+
+        notes = (
+            supabase.table("materials")
+            .select("*")
+            .eq("user_id", profile_data["user_id"])
+            .order("created_at", desc=True)
+            .execute()
+        ).data
+    except Exception as e:
+        print("PROFILE ERROR:", e)
+        return "Something went wrong", 500
+
+    is_owner = session.get("user_id") == profile_data["user_id"]
+    return render_template("profile.html", profile=profile_data, notes=notes, is_owner=is_owner)
+
+
+@app.route("/settings", methods=["GET", "POST"])
+def settings():
+    if not logged_in():
+        flash("Please log in.")
+        return redirect("/login")
+
+    if request.method == "POST":
+        bio = request.form.get("bio", "").strip()[:300]
+        try:
+            supabase.table("profiles").update({"bio": bio}).eq("user_id", session["user_id"]).execute()
+        except Exception as e:
+            print("SETTINGS ERROR:", e)
+            flash("Could not save.")
+            return redirect("/settings")
+        flash("Profile updated.")
+        return redirect(f"/u/{session['username']}")
+
+    prof = supabase.table("profiles").select("*").eq("user_id", session["user_id"]).execute()
+    return render_template("settings.html", profile=prof.data[0])
 
 if __name__ == "__main__":
     app.run(debug=True)

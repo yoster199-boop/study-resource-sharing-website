@@ -18,7 +18,7 @@
 {% endwith %}
   <p>
   {% if session.get("user_id") %}
-    Logged in as {{ session["email"] }} |
+    <a href="/u/{{ session['username'] }}">@{{ session['username'] }}</a>
     <a href="/upload">Upload new material</a> |
     <a href="/my-uploads">My uploads</a> |
     <a href="/logout">Log out</a>
@@ -44,6 +44,7 @@
         <div class="card">
           <img src="{{ item.image_url }}" alt="{{ item.title }}">
           <h3>{{ item.title }}</h3>
+          {% if item.profiles %}<p>by <a href="/u/{{ item.profiles.username }}">@{{ item.profiles.username }}</a></p>{% endif %}
           {% if item.subject %}<p><strong>{{ item.subject }}</strong></p>{% endif %}
           {% if item.description %}<p>{{ item.description }}</p>{% endif %}
         </div>
